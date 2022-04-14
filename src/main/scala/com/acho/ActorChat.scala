@@ -29,7 +29,7 @@ object ActorChat extends App {
         sender() ! ChatMessage(conversation.next())
       case ChatMessage(message) =>
         println(s"[${Thread.currentThread().getName}][${self.path.name}] $message")
-        Thread.sleep(500)
+        Thread.sleep(1000)
         if (conversation.isEmpty) system.terminate()
         else sender() ! ChatMessage(conversation.next())
     }
