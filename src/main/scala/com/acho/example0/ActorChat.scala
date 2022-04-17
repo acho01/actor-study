@@ -1,6 +1,5 @@
-package com.acho
+package com.acho.example0
 
-import akka._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
 object ActorChat extends App {
