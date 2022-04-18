@@ -1,9 +1,8 @@
-package com.acho
+package com.acho.example0
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
-import com.acho.example1.{Greeter, GreeterBot}
 import com.acho.example1.Greeter.{Greet, Greeted}
-import com.acho.example1.GreeterMain.SayHello
+import com.acho.example1.{Greeter, GreeterBot}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class GreeterAppSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike{
