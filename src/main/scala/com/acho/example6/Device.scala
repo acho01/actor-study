@@ -2,7 +2,7 @@ package com.acho.example6
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
-import com.acho.example6.Device.RespondTemperature
+import com.acho.example6.Device.{ReadTemperature, RecordTemperature, RespondTemperature, TemperatureRecorded}
 
 object Device {
   def apply(groupId: String, deviceId: String): Behavior[Command] = {
@@ -11,9 +11,13 @@ object Device {
 
   sealed trait Command
 
-  final case class ReadTemperature(requestId: String, replyTo: ActorRef[RespondTemperature]) extends Command
+  final case class ReadTemperature(requestId: Long, replyTo: ActorRef[RespondTemperature]) extends Command
 
-  final case class RespondTemperature(requestId: String, value: Option[Double])
+  final case class RecordTemperature(requestId: Long, value: Double, replyTo: ActorRef[TemperatureRecorded]) extends Command
+
+  final case class RespondTemperature(requestId: Long, value: Option[Double])
+
+  final case class TemperatureRecorded(requestId: Long)
 }
 
 class Device(context: ActorContext[Device.Command],
@@ -24,8 +28,13 @@ class Device(context: ActorContext[Device.Command],
   var lastTemperatureReading: Option[Double] = None
 
   override def onMessage(msg: Device.Command): Behavior[Device.Command] = msg match {
-    case Device.ReadTemperature(requestId, replyTo) =>
+    case ReadTemperature(requestId, replyTo) =>
       replyTo ! RespondTemperature(requestId, lastTemperatureReading)
+      Behaviors.same
+    case RecordTemperature(requestId, value, replyTo) =>
+      context.log.info("Recorded temperature {} {}", requestId, value)
+      lastTemperatureReading = Some(value)
+      replyTo ! TemperatureRecorded(requestId)
       Behaviors.same
   }
 
