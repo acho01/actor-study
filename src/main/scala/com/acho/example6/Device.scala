@@ -2,7 +2,7 @@ package com.acho.example6
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
-import com.acho.example6.Device.{ReadTemperature, RecordTemperature, RespondTemperature, TemperatureRecorded}
+import com.acho.example6.Device.{ReadTemperature, RecordTemperature, RespondTemperature, StopRequest, TemperatureRecorded}
 
 object Device {
   def apply(groupId: String, deviceId: String): Behavior[Command] = {
@@ -18,6 +18,8 @@ object Device {
   final case class RespondTemperature(requestId: Long, value: Option[Double])
 
   final case class TemperatureRecorded(requestId: Long)
+
+  final case class StopRequest() extends Command
 }
 
 class Device(context: ActorContext[Device.Command],
@@ -36,6 +38,9 @@ class Device(context: ActorContext[Device.Command],
       lastTemperatureReading = Some(value)
       replyTo ! TemperatureRecorded(requestId)
       Behaviors.same
+    case StopRequest() => {
+      Behaviors.stopped
+    }
   }
 
   override def onSignal: PartialFunction[Signal, Behavior[Device.Command]] = {

@@ -16,7 +16,8 @@ object DeviceGroup {
 }
 
 class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
-  extends AbstractBehavior[DeviceGroup .Command](context) {
+  extends AbstractBehavior[DeviceGroup.Command](context) {
+
   import DeviceGroup._
   import DeviceManager._
 
@@ -33,6 +34,7 @@ class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
           case None =>
             context.log.info("Registering device {} ", deviceId)
             val deviceActor = context.spawn(Device(deviceId, groupId), s"device-$deviceId")
+            context.watchWith(deviceActor, DeviceTerminated(deviceActor, groupId, deviceId))
             deviceIdToActorMap += deviceId -> deviceActor
             replyTo ! DeviceRegistered(deviceActor)
         }
@@ -41,6 +43,19 @@ class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
       case RequestTrackDevice(gId, _, _) =>
         context.log.warn("Ignoring TrackDevice request for {}. Group Id of this actor is different.", gId, groupId)
         this
+
+      case RequestDeviceList(requestId, gId, replyTo) =>
+        if (gId == groupId) {
+          replyTo ! ReplyDeviceList(requestId, deviceIdToActorMap.keySet)
+          Behaviors.same
+        } else {
+          Behaviors.unhandled
+        }
+      case DeviceTerminated(_, _, deviceId) =>
+        context.log.info("Device {} stopped", deviceId)
+        deviceIdToActorMap -= deviceId
+        this
+
     }
 
   override def onSignal: PartialFunction[Signal, Behavior[DeviceGroup.Command]] = {
