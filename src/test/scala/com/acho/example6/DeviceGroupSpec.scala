@@ -41,4 +41,19 @@ class DeviceGroupSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
     commandProbe.expectNoMessage(1000.milli)
   }
 
+  "return existing device for already registered actor" in {
+    val commandProbe = createTestProbe[DeviceRegistered]()
+    val deviceGroup = spawn(DeviceGroup("group-1"))
+
+    deviceGroup ! RequestTrackDevice("group-1", "device-1", commandProbe.ref)
+    val registeredMsg1 = commandProbe.receiveMessage()
+    val device1 = registeredMsg1.device
+
+    deviceGroup ! RequestTrackDevice("group-1", "device-1", commandProbe.ref)
+    val registeredMsg2 = commandProbe.receiveMessage()
+    val device2 = registeredMsg2.device
+
+    device1 should === (device2)
+  }
+
 }
