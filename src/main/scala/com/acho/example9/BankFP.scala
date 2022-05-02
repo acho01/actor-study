@@ -35,7 +35,7 @@ object Main {
 
   def apply(): Behavior[Command] = {
     Behaviors.setup(context => {
-      val account = context.spawn(BankOO(100), "account")
+      val account = context.spawn(BankFP(100), "account")
 
       account ! Withdraw(40, context.self)
       account ! Withdraw(80, context.self)
