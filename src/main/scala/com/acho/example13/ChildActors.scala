@@ -3,7 +3,7 @@ package com.acho.example13
 import akka.NotUsed
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
-import com.acho.example13.ChildActors.Parent.{CreateChild, TellChild}
+import com.acho.example13.ChildActors.Parent.{CreateChild, StopChild, TellChild}
 
 object ChildActors {
 
@@ -14,6 +14,8 @@ object ChildActors {
     case class CreateChild(name: String) extends Command
 
     case class TellChild(message: String) extends Command
+
+    case class StopChild() extends Command
 
     def apply(): Behavior[Command] = Behaviors.receive { (context, message) =>
       message match {
@@ -31,6 +33,10 @@ object ChildActors {
             context.log.info(s"Telling child ${childRef.path.name} $msg")
             childRef ! msg
             Behaviors.same
+          case StopChild() =>
+            context.log.info(s"Stopping child ${childRef.path}")
+            context.stop(childRef)
+            apply()
           case _ =>
             context.log.info("Unknown Message")
             Behaviors.same
@@ -49,6 +55,9 @@ object ChildActors {
     val parent = context.spawn(Parent(), "parent")
     parent ! CreateChild("child-1")
     parent ! TellChild("Hi Child")
+    parent ! StopChild()
+    parent ! CreateChild("child-2")
+    parent ! TellChild("Ola Amigo")
     Behaviors.empty
   }
 
